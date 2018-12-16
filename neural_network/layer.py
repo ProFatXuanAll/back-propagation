@@ -72,87 +72,32 @@ class FullyConnected:
         Returns:
             tuple of float: Output.
         """
-        ###DEBUG
-        print('x dim:')
-        print(self.__x_dim)
-        print('y dim:')
-        print(self.__y_dim)
-        print('x:')
-        print(self.__x)
-        print('x shape:')
-        print(self.__x.shape)
-        ###DEBUG
-
         # Gradient over weight
         dwxb_over_dw = self.__x
         for _ in range(self.__y_dim-1):
             dwxb_over_dw = np.concatenate((dwxb_over_dw, self.__x))
 
-        ###DEBUG
-        print('dwx+b over dw:')
-        print(dwxb_over_dw)
-        ###DEBUG
-
         dy_over_dwxb = np.array([f.derivative(wxb) for f, wxb in zip(self.__f, self.__wxb)])
-
-        ###DEBUG
-        print('dy over dwx+b:')
-        print(dy_over_dwxb)
-        ###DEBUG
         dy_over_dw = dy_over_dwxb[0] * dwxb_over_dw[0]
         for i in range(1, self.__y_dim):
             dy_over_dw = np.concatenate([dy_over_dw, dy_over_dwxb[i] * dwxb_over_dw[i]])
-
-        ###DEBUG
-        print('dy over dw:')
-        print(dy_over_dw)
-        print('dE over dy:')
-        print(dE_over_dy)
-        ###DEBUG
 
         dE_over_dw = dE_over_dy[0, 0] * dy_over_dw[0]
         for i in range(1, self.__y_dim):
             dE_over_dw = np.concatenate([dE_over_dw, dE_over_dy[0, i] * dy_over_dw[i]])
 
-        ###DEBUG
-        print('dE over dw:')
-        print(dE_over_dw)
-        ###DEBUG
-
         # Graident over input
         dwxb_over_dx = self.__w
-
-        ###DEBUG
-        print('dwx+b over dx:')
-        print(dwxb_over_dx)
-        ###DEBUG
 
         dy_over_dx = dy_over_dwxb[0] * dwxb_over_dx[0]
         for i in range(1, self.__y_dim):
             dy_over_dx = np.concatenate([dy_over_dx, dy_over_dwxb[i] * dwxb_over_dx[i]])
 
-        ###DEBUG
-        print('dy over dx:')
-        print(dy_over_dx)
-        ###DEBUG
-
         dE_over_dx = dE_over_dy[0, 0] * dy_over_dx[0]
         for i in range(1, self.__y_dim):
             dE_over_dx = np.concatenate([dE_over_dx, dE_over_dy[0, i] * dy_over_dx[i]])
 
-        ###DEBUG
-        print('dE over dx:')
-        print(dE_over_dx)
-        ###DEBUG
-
         # update weight
         self.__w = self.__alpha * self.__w - self.__eta * dE_over_dw
-
-        ###DEBUG
-        print('new w:')
-        print(self.__w)
-        print('new dE over dy:')
-        print(np.matrix(np.sum(dE_over_dx, axis=0)))
-        ###DEBUG
 
         return np.matrix(np.sum(dE_over_dx, axis=0))

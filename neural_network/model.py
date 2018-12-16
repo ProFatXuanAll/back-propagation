@@ -35,7 +35,10 @@ class Model:
             print('epoch: {}/{}'.format(i+1, self.__epoch))
             batch = math.ceil(x.shape[0]/self.__batch_size)
             for j in range(batch):
-                print('batch: {}/{}'.format(j+1, batch))
+                progress_percentage = (j+1)/batch*100
+                progress = math.floor(progress_percentage/10)
+                progress_bar = ''.join(['=' for _ in range(progress-1)]) + '>' + ''.join(' ' for _ in range(10-progress))
+                print('batch: [{}] {:2.2f}%'.format(progress_bar, progress_percentage), end='\r')
 
                 # SGD selection
                 _x = self.get_batch(x, j)
@@ -44,20 +47,12 @@ class Model:
                 _x = _x[sgd_index]
                 _y = _y[sgd_index]
                 dE_over_dy = self.error_derivative(_x, _y)
-                ###DEBUG
-                print('x:')
-                print(_x)
-                print('predict y:')
-                print(self.predict(_x))
-                print('actual y:')
-                print(_y)
-                ###DEBUG
 
                 # update section
                 for which_layer in range(len(self.__layer)):
                     _x = self.__layer[which_layer].remember(_x)
                 for which_layer in range(len(self.__layer)-1, -1, -1):
                     dE_over_dy = self.__layer[which_layer].back_propagate(dE_over_dy)
-                # show error
-                print('error: {}'.format(self.error(x, y)))
+            # show error
+            print('\nerror: {}'.format(np.sum(self.error(x, y), axis=0)))
 
