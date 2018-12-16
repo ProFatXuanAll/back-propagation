@@ -1,14 +1,6 @@
 import math
 
-class Sigmoid:
-    def __init__(self):
-        pass
+def sigmoid(x):
+    return 1 / (1 + math.exp(-1 * x))
 
-    @staticmethod
-    def function(x):
-        return 1 / (1 + math.exp(-1 * x))
-
-    @staticmethod
-    def derivative(x):
-        y = Sigmoid.function(x)
-        return y * (1 - y)
+sigmoid.derivative = lambda x: sigmoid(x) * (1 - sigmoid(x))
