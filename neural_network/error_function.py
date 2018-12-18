@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 # for vector
 def sq_error(predict_y, actual_y):

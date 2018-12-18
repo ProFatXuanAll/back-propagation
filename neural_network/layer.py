@@ -34,8 +34,29 @@ class FullyConnected:
         self.__wxb = None
         self.__y = None
 
-    def wxb(self, x):
-        return self.__w * np.transpose(x) + np.transpose(self.__b)
+    def weighted_sum(self, x):
+        """Weighted sum $w * x + b$.
+
+        Args:
+            x (matrix of float): Input matrix.
+
+        Returns:
+            matrix of float: Weighted sum.
+        """
+        # Copy `w` and convert into matrix, dimension (m, d).
+        w = np.matrix(self.__w)
+        # Copy `x` and convert into matrix, dimension (n, d).
+        x = np.matrix(x)
+        # Transpose `x`, dimension (d, n).
+        x = np.transpose(x)
+        # Copy `b` and convert into matrix, dimension (1, m).
+        b = np.matrix(self.__b)
+        # Transpose `b`, dimension (m, 1).
+        b = np.transpose(b)
+        # Duplicate `b` n times and combine into one matrix, dimension (m, n).
+        b = np.concatenate([b for _ in range(x.shape[1])], axis=1)
+        # Weighted sum, dimension (m, d) * (d, n) + (m, n) = (m, n).
+        return w * x + b
 
     def forward_pass(self, x):
         """Forward pass.
@@ -46,20 +67,23 @@ class FullyConnected:
         Returns:
             list of float: Output.
         """
-        # Calculate wx+b
-        x = np.matrix(x)
-        wxb = self.wxb(x)
+        # Copy `w * x + b` and convert into matrix, dimension (m, n).
+        wx_b = np.matrix(self.weighted_sum(x))
+        # Copy `f` and convert into array, dimension(1, m)
+        f = np.array(self.__f)
+        # Activated matrix `y` which element are activated by `f` with input `wx_b`, dimension (m, n).
+        y = np.matrix(np.zeros(wx_b.shape))
 
-        y = []
-        for f, row in zip(self.__f, wxb.tolist()):
-            y.append([f(col) for col in row])
-
-        y = np.matrix(y)
+        # Perform activation.
+        for row in range(wx_b.shape[0]):
+            for col in range(wx_b.shape[1]):
+                y[row, col] = f[row](wx_b[row, col], wx_b[row, :])
+        # Transpose `y`, dimension (n, m).
         return np.transpose(y)
 
     def remember(self, x):
         self.__x = np.matrix(x)
-        self.__wxb = self.wxb(x)
+        self.__wxb = self.weighted_sum(x)
         self.__y = self.forward_pass(x)
         return self.__y
 
@@ -86,7 +110,10 @@ class FullyConnected:
         for i in range(1, self.__y_dim):
             dE_over_dw = np.concatenate([dE_over_dw, dE_over_dy[0, i] * dy_over_dw[i]])
 
-        # Graident over input
+        # Gradient over bias
+        # dE_over_db = np.multiply(dE_over_dy,dy_over_dwxb)
+
+        # Gradient over input
         dwxb_over_dx = self.__w
 
         dy_over_dx = dy_over_dwxb[0] * dwxb_over_dx[0]
@@ -99,5 +126,8 @@ class FullyConnected:
 
         # update weight
         self.__w = self.__alpha * self.__w - self.__eta * dE_over_dw
+
+        # update bias
+        # self.__b = self.__alpha * self.__b - self.__eta * dE_over_db
 
         return np.matrix(np.sum(dE_over_dx, axis=0))
